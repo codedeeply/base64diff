@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+
+# Longform help
+function help(){
+    echo "base64diff [options] <file1> <file2>"
+    echo " - base64diff is a script to quickly decrypt and compare contents of base64 hashes"
+    echo ""
+    echo " arguments:"
+    echo "  -h, --help                  Display this help message"
+    #echo "  -o, --outfile               Specify output file (default is b64diff.txt)"
+    #echo "  -q, --quiet                 Be as quite as possible"
+}
+
+die () {
+    echo >&2 "$@"
+    exit 1
+}
+
+# No args small help
+if (( $# == 0 )); then
+    echo "base64diff [options] <file1> <file2>"
+    echo "  - base64diff is a script to quickly decrypt and compare contents of base64 hashes"
+    echo ""
+    echo "Use -h for help"
+    exit
+fi
+
+for arg in "$@"
+do
+  case $arg in
+    -h|--help)
+    help
+    exit
+    ;;
+    #-o=*|--outfile=*)
+    #fname="${arg#*=}"
+    #shift # Remove --outfile= from processing
+    #;;
+    #-q|--quiet)
+    #QUIET=1
+    #;;
+    *)
+    OTHER_ARGUMENTS+=("$1")
+    #shift # Remove generic argument from processing
+    ;;
+  esac
+done
+
+#[ "$#" -eq 2 ] || die "2 files required, $# provided"
+
+if [[ -z "$1" || -z "$2" ]]; then
+  echo "Missing two files to compare. Ensure both files exist."
+  exit 1
+fi
+
+b64hash1=`cat $1`
+b64hash2=`cat $2`
+
+if [[ -z "$b64hash1" || -z "$b64hash2" ]]; then
+    echo "Missing two hashes to compare. Ensure both files are populated."
+    exit 1
+else
+    hash1full=`echo $b64hash1 | base64 --decode`
+    hash2full=`echo $b64hash2 | base64 --decode`
+    diff -c <(echo "$hash1full" ) <(echo "$hash2full")
+fi
